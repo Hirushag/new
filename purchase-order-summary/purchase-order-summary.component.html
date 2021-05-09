@@ -1,0 +1,192 @@
+<div class="content-heading mb-2">Purchase Order Summary</div>
+
+<div class="row" *ngIf="LoadUI == false">
+  <div class="col-lg-12 no-gutters mt-5">
+    <div class="d-flex align-middle align-items-center justify-content-center">
+      <div class="ball-grid-pulse">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div class="d-flex align-middle align-items-center justify-content-center">
+      <h2 class="text-muted">Loading interfaces...</h2>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="LoadUI == true">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="float-right">
+        <button
+          class="mb-2 btn btn-outline-primary btn-oval"
+          type="button"
+          [routerLink]="['/home']"
+        >
+          Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" *hasPermission="[28]">
+    <div class="row">
+      <div class="col-md-12">
+        <button
+          class="mb-2 btn btn-success btn-oval"
+          type="button"
+          [routerLink]="['/inventory/purchaseorder/add']"
+          *hasPermission="[29]"
+        >
+          Add Purchase Order
+        </button>
+      </div>
+      <div class="col-md-12">
+        <p-table
+          #dt
+          [columns]="cols"
+          [value]="po_list"
+          [paginator]="true"
+          [rows]="8"
+          [globalFilterFields]="['pocode']"
+          [responsive]="false"
+          [autoLayout]="true"
+          styleClass="ui-table-v2"
+          [rowHover]="true"
+          [rowsPerPageOptions]="[10, 25, 50]"
+        >
+          <ng-template pTemplate="caption">
+            <div class="ui-table-globalfilter-container">
+              <input
+                type="text"
+                pInputText
+                placeholder="What are you looking for?"
+                (input)="dt.filterGlobal($event.target.value, 'contains')"
+              />
+            </div>
+          </ng-template>
+          <ng-template pTemplate="header" let-columns>
+            <tr>
+              <th
+                *ngFor="let col of columns"
+                [pSortableColumn]="col.field"
+                [pSortableColumnDisabled]="col.sortable"
+                [style.width]="col.width"
+              >
+                {{ col.header }}
+                <p-sortIcon
+                  *ngIf="!col.sortable"
+                  [field]="col.field"
+                  ariaLabel="Activate to sort"
+                  ariaLabelDesc="Activate to sort in descending order"
+                  ariaLabelAsc="Activate to sort in ascending order"
+                ></p-sortIcon>
+              </th>
+            </tr>
+            <tr>
+              <th *ngFor="let col of columns" [ngSwitch]="col.field">
+                <!-- <input *ngSwitchCase="'clientcode'" pInputText type="text" (input)="dt.filter($event.target.value, col.field, col.filterMatchMode)"> -->
+
+                <p-dropdown
+                  *ngSwitchCase="'status'"
+                  [options]="statusoptions"
+                  [style]="{ width: '100%' }"
+                  (onChange)="dt.filter($event.value, col.field, 'equals')"
+                  appendTo="body"
+                ></p-dropdown>
+              </th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-rowData let-columns="columns">
+            <tr
+              [pSelectableRow]="rowData"
+              [ngClass]="rowData.priority == 1 ? 'text-danger' : ''"
+            >
+              <td *ngFor="let col of columns" [ngSwitch]="col.field">
+                <div *ngSwitchCase="'pocode'">
+                  <a
+                    class="hover_link"
+                    routerLink="/inventory/purchaseorder/detail/{{
+                      rowData.id
+                    }}"
+                    >{{ rowData[col.field] }}
+                  </a>
+                </div>
+                <div *ngSwitchCase="'supplier'">
+                  <a
+                    class="hover_link"
+                    routerLink="/inventory/suppliers/detail/{{
+                      rowData.supplier.id
+                    }}"
+                    >{{ rowData.supplier?.suppliername }}
+                  </a>
+                </div>
+                <div *ngSwitchCase="'timestamp'">
+                  {{
+                    rowData.timestamp
+                      | date
+                        : "dd/MM/yyyy hh:mm:ss a"
+                        : sysuser?.app_settings?.timezone?.offset
+                  }}
+                </div>
+
+                <div *ngSwitchCase="'createdby'">
+                  {{ rowData.createdby?.firstname }}
+                  {{ rowData.createdby?.lastname }}
+                </div>
+
+                <div *ngSwitchCase="'status'">
+                  <span class="badge badge-danger" *ngIf="rowData.status == -6"
+                    >Cancelled</span
+                  >
+                  <span class="badge badge-danger" *ngIf="rowData.status == -4"
+                    >Rejected</span
+                  >
+                  <span class="badge badge-warning" *ngIf="rowData.status == -2"
+                    >On Hold</span
+                  >
+                  <span class="badge badge-inverse" *ngIf="rowData.status == 0"
+                    >Pending</span
+                  >
+                  <span class="badge badge-info" *ngIf="rowData.status == 2"
+                    >SK Reviewed</span
+                  >
+                  <span class="badge badge-info" *ngIf="rowData.status == 4"
+                    >Cost Reviewed</span
+                  >
+                  <span class="badge badge-success" *ngIf="rowData.status == 6"
+                    >HO Approved</span
+                  >
+                  <span class="badge badge-success" *ngIf="rowData.status == 8"
+                    >Order Placed</span
+                  >
+                  <span class="badge badge-purple" *ngIf="rowData.status == 10"
+                    >Completed</span
+                  >
+                </div>
+
+                <div *ngSwitchCase="'actions'">
+                  <button
+                    class="btn btn-primary btn-xs btn-block mb-1"
+                    routerLink="/inventory/purchaseorder/detail/{{
+                      rowData.id
+                    }}"
+                  >
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+</div>

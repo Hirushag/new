@@ -1,0 +1,1515 @@
+<div class="content-heading mb-2">Purchase Order {{ po_data?.pocode }}</div>
+<div class="row" *ngIf="LoadUI == false">
+  <div class="col-lg-12 no-gutters mt-5">
+    <div class="d-flex align-middle align-items-center justify-content-center">
+      <div class="ball-grid-pulse">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div class="d-flex align-middle align-items-center justify-content-center">
+      <h2 class="text-muted">Loading interfaces...</h2>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="LoadUI == true">
+  <div class="row" *hasPermission="[28]">
+    <div class="col-sm-12">
+      <div class="float-right">
+        <button
+          class="mb-2 mr-1 btn btn-outline-primary btn-oval"
+          type="button"
+          [routerLink]="['/inventory/purchaseorder/summary']"
+        >
+          Purchase Orders
+        </button>
+        <button
+          class="mb-2 btn btn-outline-primary btn-oval"
+          type="button"
+          [routerLink]="['/home']"
+        >
+          Dashboard
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="col-md-12"
+      *ngIf="po_data?.status != 10 && po_data?.status != -6"
+    >
+      <div class="card card-default" *hasPermission="[30]">
+        <div class="card-body">
+          <div class="row"></div>
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <h4>Click below to Update Status</h4>
+              <button
+                class="ml-2 btn btn-danger btn-oval"
+                [disabled]="po_data?.status == -4"
+                (click)="changeStatus(-4)"
+              >
+                Reject
+              </button>
+              <button
+                class="ml-2 btn btn-warning btn-oval"
+                [disabled]="po_data?.status == -2"
+                (click)="changeStatus(-2)"
+              >
+                On Hold
+              </button>
+              <button
+                class="ml-2 btn btn-info btn-oval"
+                [disabled]="po_data?.status == 2"
+                (click)="changeStatus(2)"
+              >
+                SK Reviewed
+              </button>
+              <button
+                class="ml-2 btn btn-info btn-oval"
+                [disabled]="po_data?.status == 4 || po_data?.status < 2"
+                (click)="changeStatus(4)"
+              >
+                Cost Reviewed
+              </button>
+              <button
+                class="ml-2 btn btn-success btn-oval"
+                [disabled]="po_data?.status == 6 || po_data?.status < 4"
+                (click)="changeStatus(6)"
+              >
+                HO Approved
+              </button>
+              <button
+                class="ml-2 btn btn-success btn-oval"
+                [disabled]="po_data?.status == 8 || po_data?.status < 6"
+                (click)="changeStatus(8)"
+              >
+                Order Placed
+              </button>
+              <button
+                class="ml-2 btn btn-purple btn-oval"
+                [disabled]="po_data?.status == 10 || sysuser?.userlevel < 14"
+                (click)="changeStatus(10)"
+              >
+                Completed
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-12">
+      <!-- <button
+        *ngIf="po_data?.status < 6"
+        class="btn btn-warning btn-lg ml-2"
+        type="button"
+        (click)="addItemModal.show()"
+      >
+        Add Item
+      </button> -->
+      <button
+        class="btn btn-primary btn-sm btn-oval ml-2"
+        type="button"
+        (click)="openEditPoModel(editPoModel)"
+      >
+        Edit PO
+      </button>
+      <button
+        class="btn btn-primary btn-sm btn-oval ml-2"
+        type="button"
+        (click)="purchaseOrderTermsEditModalShow(purchaseOrdersTermsEditModal)"
+      >
+        EDIT TERMS AND CONDITIONS
+      </button>
+
+      <!-- <button
+        class="btn btn-success btn-sm float-right btn-oval"
+        type="button"
+        (click)="printpo()"
+        *hasPermission="[31]"
+      >
+        PRINT
+      </button> -->
+      <button
+        class="btn btn-success btn-sm btn-oval float-right"
+        type="button"
+        (click)="printPDF()"
+        [disabled]="print_request"
+        *hasPermission="[31]"
+      >
+        <span *ngIf="!print_request">PRINT</span>
+        <span *ngIf="print_request"
+          >PLEASE WAIT <i class="fas fa-spinner fa-spin"></i
+        ></span>
+      </button>
+    </div>
+
+    <div class="col-md-12">
+      <div id="printpo">
+        <div class="mt-3 card padding-prints">
+          <div class="card-body">
+            <h3 class="text-right">PO# : {{ po_data?.pocode }}</h3>
+            <hr />
+            <div class="row">
+              <div class="col-lg-12 col-sm-12">
+                <div class="row">
+                  <div class="col-lg-4 col-sm-4 br pv">
+                    <div class="row">
+                      <div
+                        class="col-md-1 text-center visible-md visible-lg"
+                      ></div>
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-sm-4 br pv">
+                    <div class="row">
+                      <div class="col-md-12" *ngIf="po_data?.grn_id != null">
+                        <h4>SYSTEM GOODS RECEIVE NOTE GENERATED [GRN]</h4>
+                        <p>Linked with GRN : {{ po_data?.grn_id?.grncode }}</p>
+                        <p class="printhide">
+                          <a
+                            routerLink="/inventory/grn/detail/{{
+                              po_data?.grn_id?.id
+                            }}"
+                            >VIEW GRN</a
+                          >
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <!--<div class="clearfix hidden-md hidden-lg">-->
+                  <!--<hr/>-->
+                  <!--</div>-->
+                  <div class="col-lg-4 col-sm-4 pv">
+                    <div class="clearfix"></div>
+                    <div class="clearfix">
+                      <p class="float-left">PO #</p>
+                      <p class="float-right mr">{{ po_data?.pocode }}</p>
+                    </div>
+
+                    <div class="clearfix">
+                      <p class="float-left">Supplier</p>
+                      <p class="float-right mr">
+                        <a
+                          class="hover_link"
+                          routerLink="/inventory/suppliers/detail/{{
+                            po_data?.supplier?.id
+                          }}"
+                        >
+                          {{ po_data?.supplier?.suppliername }}
+                        </a>
+                      </p>
+                    </div>
+                    <div class="clearfix" *ngIf="po_data?.currency != null">
+                      <p class="float-left">Currency</p>
+                      <p class="float-right mr">
+                        {{ po_data?.currency?.c_code }}
+                      </p>
+                    </div>
+                    <div
+                      class="clearfix"
+                      *ngIf="po_data?.currency_rate != null"
+                    >
+                      <p class="float-left">Currency Rate</p>
+                      <p class="float-right mr">
+                        {{ po_data?.currency_rate }}
+                      </p>
+                    </div>
+
+                    <div class="clearfix">
+                      <p class="float-left">Created On</p>
+                      <p class="float-right mr">
+                        {{
+                          po_data?.timestamp
+                            | date
+                              : "dd/MM/yyyy hh:mm a"
+                              : sysuser?.app_settings?.timezone?.offset
+                        }}
+                      </p>
+                    </div>
+
+                    <div class="clearfix">
+                      <p class="float-left">Created by</p>
+                      <p class="float-right mr">
+                        {{ po_data?.createdby.firstname }}
+                        {{ po_data?.createdby.lastname }}
+                      </p>
+                    </div>
+                    <div
+                      class="clearfix"
+                      *ngIf="po_data?.engineer_name != null"
+                    >
+                      <p class="float-left">Engineer Name</p>
+                      <p class="float-right mr">
+                        {{ po_data?.engineer_name.firstname }}
+                        {{ po_data?.engineer_name.lastname }}
+                      </p>
+                    </div>
+                    <div class="clearfix" *ngIf="po_data?.project_name != null">
+                      <p class="float-left">Project Name</p>
+                      <p class="float-right mr">
+                        {{ po_data?.project_name }}
+                      </p>
+                    </div>
+                    <div
+                      class="clearfix"
+                      *ngIf="po_data?.approval1_timestamp != null"
+                    >
+                      <p class="float-left">Approved On</p>
+                      <p class="float-right mr">
+                        {{
+                          po_data?.approval1_timestamp
+                            | date
+                              : "dd/MM/yyyy hh:mm a"
+                              : sysuser?.app_settings?.timezone?.offset
+                        }}
+                      </p>
+                    </div>
+
+                    <div class="clearfix" *ngIf="po_data?.approval1 != null">
+                      <p class="float-left">Approved by</p>
+                      <p class="float-right mr">
+                        {{ po_data?.approval1.firstname }}
+                        {{ po_data?.approval1.lastname }}
+                      </p>
+                    </div>
+                    <div class="clearfix">
+                      <p class="float-left">Status</p>
+                      <p class="float-right mr">
+                        <span
+                          class="badge badge-danger"
+                          *ngIf="po_data?.status == -6"
+                          >Cancelled</span
+                        >
+                        <span
+                          class="badge badge-danger"
+                          *ngIf="po_data?.status == -4"
+                          >Rejected</span
+                        >
+                        <span
+                          class="badge badge-warning"
+                          *ngIf="po_data?.status == -2"
+                          >On Hold</span
+                        >
+                        <span
+                          class="badge badge-inverse"
+                          *ngIf="po_data?.status == 0"
+                          >Pending</span
+                        >
+                        <span
+                          class="badge badge-info"
+                          *ngIf="po_data?.status == 2"
+                          >SK Reviewed</span
+                        >
+                        <span
+                          class="badge badge-info"
+                          *ngIf="po_data?.status == 4"
+                          >Cost Reviewed</span
+                        >
+                        <span
+                          class="badge badge-success"
+                          *ngIf="po_data?.status == 6"
+                          >HO Approved</span
+                        >
+                        <span
+                          class="badge badge-success"
+                          *ngIf="po_data?.status == 8"
+                          >Order Placed</span
+                        >
+                        <span
+                          class="badge badge-purple"
+                          *ngIf="po_data?.status == 10"
+                          >Completed</span
+                        >
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <hr />
+
+            <div class="col-sm-12 mt-3" *ngIf="draft_data">
+              <div class="alert alert-custom-warning">
+                <strong>Warning!</strong> You have unsaved changes. Please Save
+                before you leave the screen.
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-10">
+                <button
+                  class="btn btn-info mr-2 mt-2 mb-1 printhide"
+                  type="button"
+                  *ngIf="sysuser?.userlevel >= 14"
+                  (click)="
+                    editInvoiceItemPercentageModalShow(
+                      editInvoiceItemPercentageModal
+                    )
+                  "
+                  [disabled]="po_data?.status == -4 || po_data?.status == 4"
+                >
+                  Add Bulk Discount
+                </button>
+              </div>
+
+              <div class="col-sm-12 mt-3">
+                <div class="card card-default">
+                  <div class="card-header">
+                    <!-- <b>Note:</b>Please add all the items and Click Finish to
+                  Proceed. -->
+                  </div>
+                  <!-- START table-responsive-->
+                  <div class="table-responsive p-3">
+                    <table
+                      class="table table-striped table-sm table-bordered table-hover"
+                      id="table-ext-2"
+                    >
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th class="text-center" style="width: 400px">
+                            Product
+                          </th>
+                          <th class="text-right" style="min-width: 100px">
+                            Unit Cost
+                          </th>
+                          <th class="text-right" style="min-width: 70px">
+                            Qty
+                          </th>
+                          <th class="text-right" style="min-width: 70px">
+                            Gross Total
+                          </th>
+                          <th class="text-right" style="min-width: 70px">
+                            Discount
+                          </th>
+                          <th class="text-right" style="min-width: 100px">
+                            Net Total
+                          </th>
+                          <th class="text-right" style="min-width: 100px">
+                            Grand Total
+                          </th>
+
+                          <th
+                            class="printhide"
+                            *ngIf="po_data?.status != 10"
+                            style="min-width: 70px"
+                          ></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          *ngFor="let item of items; let i = index"
+                          [ngClass]="{ 'new-draft-entry': item.id == null }"
+                        >
+                          <td>{{ i + 1 }}</td>
+                          <td
+                            [ngClass]="{
+                              'bg-warning-light':
+                                item.product_id == null && !item.input_enabled
+                            }"
+                            (click)="enableInputs(item)"
+                          >
+                            <span *ngIf="!item.input_enabled">
+                              <a
+                                class="hover_link"
+                                routerLink="/inventory/products/detail/{{
+                                  item.product_id?.id
+                                }}"
+                              >
+                                {{ item.product_id?.productcode }}:
+                                {{ item.product_id?.productname }}
+                              </a>
+                            </span>
+                            <br />
+                            <p class="mt-2">
+                              <small>
+                                <span
+                                  style="display: inline-block"
+                                  class="mr-2"
+                                  [innerHTML]="item.specification"
+                                ></span>
+                              </small>
+                            </p>
+                            <span class="float-right">
+                              <i
+                                class="fas fa-edit text-info"
+                                (click)="
+                                  editSpecificationModalShow(
+                                    item,
+                                    editSpecificationModal
+                                  )
+                                "
+                                *ngIf="po_data?.status != 10"
+                              ></i>
+                            </span>
+                            <p-dropdown
+                              *ngIf="item.input_enabled && item.id != null"
+                              [options]="productslist"
+                              name="supplier"
+                              [(ngModel)]="item.product_id.id"
+                              (ngModelChange)="itemDataAltered(item)"
+                              [filter]="true"
+                              [autoWidth]="true"
+                              inputStyleClass="form-control"
+                              styleClass="fw"
+                              [style]="{ width: '400px' }"
+                              inputStyle="{'width':'400px'}"
+                              [resetFilterOnHide]="true"
+                              [showClear]="true"
+                              [autofocus]="true"
+                              [virtualScroll]="true"
+                              itemSize="10"
+                              appendTo="body"
+                            ></p-dropdown>
+                            <p-dropdown
+                              *ngIf="item.input_enabled && item.id == null"
+                              [options]="productslist_draft"
+                              name="supplier"
+                              [(ngModel)]="item.product_id"
+                              (ngModelChange)="itemDataAltered(item)"
+                              [filter]="true"
+                              [autoWidth]="true"
+                              inputStyleClass="form-control"
+                              styleClass="fw"
+                              [style]="{ width: '400px' }"
+                              inputStyle="{'width':'400px'}"
+                              [resetFilterOnHide]="true"
+                              [showClear]="true"
+                              [autofocus]="true"
+                              [virtualScroll]="true"
+                              itemSize="10"
+                              appendTo="body"
+                            ></p-dropdown>
+                          </td>
+                          <td class="text-right" (click)="enableInputs(item)">
+                            <span *ngIf="!item.input_enabled">{{
+                              item.unitcost | number: "1.2-2"
+                            }}</span>
+                            <span *ngIf="item.input_enabled">N/A</span>
+                            <!-- <input
+                            *ngIf="item.input_enabled"
+                            class="form-control"
+                            [(ngModel)]="item.unitprice"
+                          /> -->
+                          </td>
+                          <td
+                            class="text-right"
+                            [ngClass]="{
+                              'bg-warning-light':
+                                item.quantity == null && !item.input_enabled
+                            }"
+                            (click)="enableInputs(item)"
+                          >
+                            <span *ngIf="!item.input_enabled"
+                              >{{ item.quantity }}
+                              {{ item.product?.unit }}</span
+                            >
+                            <input
+                              type="number"
+                              *ngIf="item.input_enabled"
+                              class="form-control text-right"
+                              [(ngModel)]="item.quantity"
+                              (ngModelChange)="itemDataAltered(item)"
+                              (keydown.enter)="addLine(1)"
+                            />
+                          </td>
+
+                          <td class="text-right">
+                            {{
+                              item.unitcost * item.quantity | number: "1.2-2"
+                            }}
+                          </td>
+
+                          <td class="text-right">
+                            <span
+                              *ngIf="updatingid != item.id"
+                              (click)="enableInputs(item)"
+                            >
+                              {{ item.discount | number: "2.2-2" }}
+                            </span>
+
+                            <div
+                              class="input-group"
+                              *ngIf="
+                                updateitem == true && updatingid == item.id
+                              "
+                            >
+                              <input
+                                class="form-control"
+                                type="number"
+                                step="any"
+                                name="discount"
+                                [(ngModel)]="newdiscount"
+                                [readonly]="
+                                  po_data?.status == 4 ||
+                                  item.item_type == 'SERVICE'
+                                "
+                              />
+                              <div class="input-group-append">
+                                <select
+                                  class="form-control"
+                                  name="discount_type"
+                                  [(ngModel)]="newdiscount_type"
+                                  [disabled]="
+                                    po_data?.status == 4 ||
+                                    item.item_type == 'SERVICE'
+                                  "
+                                >
+                                  <option value="%">%</option>
+                                  <option
+                                    [ngValue]="
+                                      sysuser?.app_settings?.basic_settings
+                                        ?.default_currency
+                                    "
+                                  >
+                                    {{
+                                      sysuser?.app_settings?.basic_settings
+                                        ?.default_currency
+                                    }}
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td
+                            class="text-right"
+                            [ngClass]="{
+                              'bg-warning-light':
+                                item.net_total == null &&
+                                !item.input_enabled &&
+                                this.po_data.status != 10
+                            }"
+                            (click)="enableInputs(item)"
+                          >
+                            <span *ngIf="!item.input_enabled">{{
+                              item.totalcost | number: "1.2-2"
+                            }}</span>
+                            <input
+                              type="number"
+                              *ngIf="item.input_enabled"
+                              class="form-control text-right"
+                              [(ngModel)]="item.net_total"
+                              (ngModelChange)="itemDataAltered(item)"
+                              (keydown.enter)="addLine(1)"
+                            />
+                          </td>
+
+                          <td class="text-right" (click)="enableInputs(item)">
+                            <span *ngIf="!item.input_enabled">{{
+                              item.totalcost | number: "1.2-2"
+                            }}</span>
+                            <span *ngIf="item.input_enabled">N/A</span>
+                            <!-- <input
+                            *ngIf="item.input_enabled"
+                            class="form-control"
+                            [(ngModel)]="item.unitprice"
+                          /> -->
+                          </td>
+
+                          <td *ngIf="po_data?.status != 10" class="printhide">
+                            <button
+                              class="btn-xs btn btn-warning m-1"
+                              (click)="item.input_enabled = true"
+                              *ngIf="item?.input_enabled == false"
+                            >
+                              <i class="far fa-edit"></i>
+                            </button>
+
+                            <!-- save option for existing item -->
+                            <button
+                              class="btn-xs btn btn-success m-1"
+                              (click)="saveItem(item, i)"
+                              *ngIf="
+                                item?.synced_status == false && item?.id != null
+                              "
+                            >
+                              <i class="far fa-check-circle"></i>
+                            </button>
+                            <!-- save option for new item -->
+                            <button
+                              class="btn-xs btn btn-success m-1"
+                              (click)="validateAndSave()"
+                              *ngIf="
+                                item?.synced_status == false &&
+                                item?.id == null &&
+                                item.input_enabled == true
+                              "
+                            >
+                              <i class="far fa-check-circle"></i>
+                            </button>
+                            <!-- discard changes -->
+                            <button
+                              class="btn-xs btn btn-info m-1"
+                              (click)="discardChanges(item)"
+                              *ngIf="
+                                item?.input_enabled == true && item?.id != null
+                              "
+                            >
+                              <i
+                                class="far fa-window-close"
+                                title="discard changes"
+                              ></i>
+                            </button>
+                            <button
+                              class="btn-xs btn btn-danger m-1"
+                              (click)="deleteItem(item, i)"
+                            >
+                              <i class="fas fa-trash-alt"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <!-- END table-responsive-->
+                  <div
+                    class="card-footer printhide"
+                    *ngIf="this.po_data?.status != 10"
+                  >
+                    <div class="d-flex">
+                      <div>
+                        <div>
+                          <div>
+                            <button
+                              class="btn btn-primary btn-sm mr-2 btn-oval"
+                              type="button"
+                              (click)="addLine(1)"
+                            >
+                              Add row
+                            </button>
+                            <button
+                              class="btn btn-primary btn-sm btn-oval"
+                              type="button"
+                              (click)="addLine(4)"
+                            >
+                              Add multiple rows
+                            </button>
+                            <!-- <button
+                            class="btn btn-primary btn-sm"
+                            (click)="clearEmptyrows()"
+                          >
+                            Clear
+                          </button> -->
+                          </div>
+                        </div>
+                      </div>
+                      <div class="ml-auto">
+                        <button
+                          class="btn btn-success btn-sm mr-2 btn-oval"
+                          [disabled]="draft_data == false"
+                          (click)="validateAndSave()"
+                        >
+                          Save new items
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 mt-3" *ngIf="draft_data">
+                <div class="alert alert-custom-warning">
+                  <strong>Warning!</strong> You have unsaved changes. Please
+                  Save before you leave the screen.
+                </div>
+              </div>
+              <div class="row mt-5">
+                <div class="col-sm-5 offset-sm-7">
+                  <div class="clearfix">
+                    <p class="float-left h4">SUB TOTAL</p>
+                    <p class="float-right mr h4">
+                      {{ po_data?.subtotal | number: "1.2-2" }}
+                      {{
+                        sysuser?.app_settings?.basic_settings?.default_currency
+                      }}
+                    </p>
+                  </div>
+                </div>
+                <div class="col-sm-5 offset-sm-7">
+                  <div class="clearfix">
+                    <p class="float-left h4">DISCOUNT</p>
+                    <p class="float-right mr h4">
+                      -{{ po_data?.discount | number: "1.2-2" }}
+                      {{ po_data?.currency?.c_code }}
+                    </p>
+                  </div>
+                </div>
+                <div class="col-sm-5 offset-sm-7" *ngIf="po_data?.vat_rate > 0">
+                  <div class="clearfix">
+                    <p class="float-left h4">VAT ({{ po_data.vat_rate }}%)</p>
+                    <p class="float-right mr h4">
+                      {{ po_data?.vat_amount | number: "1.2-2" }}
+                      {{ po_data?.currency?.c_code }}
+                    </p>
+                  </div>
+                </div>
+                <div class="col-sm-5 offset-sm-7" *ngIf="po_data?.nbt_rate > 0">
+                  <div class="clearfix">
+                    <p class="float-left h4">NBT ({{ po_data.nbt_rate }}%)</p>
+                    <p class="float-right mr h4">
+                      {{ po_data?.nbt_amount | number: "1.2-2" }}
+                      {{ po_data?.currency?.c_code }}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="col-sm-5 offset-sm-7"
+                  *ngIf="po_data?.svat_rate > 0"
+                >
+                  <div class="clearfix">
+                    <p class="float-left h4">SVAT ({{ po_data.svat_rate }}%)</p>
+                    <p class="float-right mr h4">
+                      {{ po_data?.svat_amount | number: "1.2-2" }}
+                      {{ po_data?.currency?.c_code }}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="col-sm-5 offset-sm-7"
+                  *ngFor="let item of tax_breakdown"
+                >
+                  <div class="clearfix">
+                    <p class="float-left h4">
+                      {{ item.tax_type_id.description }} ({{ item.tax_rate }}%)
+                    </p>
+                    <p class="float-right mr h4">
+                      {{ item.tax_amount | number: "1.2-2" }}
+                      {{ po_data?.currency?.c_code }}
+                    </p>
+                  </div>
+                </div>
+                <div class="col-sm-5 offset-sm-7">
+                  <div class="clearfix">
+                    <p class="float-left h3">GRAND TOTAL</p>
+                    <p class="float-right mr h3">
+                      {{ po_data?.grandtotal | number: "1.2-2" }}
+                      {{ po_data?.currency?.c_code }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="col-md-12"
+        *ngIf="po_data?.status == 10 && sysuser?.userlevel >= 20"
+      >
+        <div class="card card-default" *hasPermission="[32]">
+          <div class="card-body">
+            <div class="row"></div>
+            <div class="row">
+              <div class="col-md-12">
+                <h4>Click below to Cancel this Purchase Order</h4>
+
+                <button
+                  class="btn btn-danger btn-oval"
+                  [disabled]="po_data?.status == -6"
+                  (click)="changeStatus(-6)"
+                >
+                  CANCEL PURCHASE ORDER
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <div
+      class="col-md-12"
+      *ngIf="
+        po_data?.status == 10 &&
+        sysuser?.userlevel < 20 &&
+        sysuser.app_settings?.basic_settings?.cancellation_approvals == 1
+      "
+    >
+      <div class="card card-default">
+        <div class="card-body">
+          <div class="row"></div>
+          <div class="row">
+            <div class="col-md-12">
+              <h4>
+                Click below to submit a cancellation request to this Purchase
+                Order
+              </h4>
+            </div>
+            <div class="col-md-6 mt-2">
+              <input
+                class="form-control"
+                [style]="{ width: '100%' }"
+                type="text"
+                name="cancel_reason"
+                placeholder="Reason to cancel"
+                [(ngModel)]="cancel_reason"
+              />
+            </div>
+            <div class="col-md-12 mt-3">
+              <button
+                class="btn btn-danger btn-oval"
+                [disabled]="po_data?.status == -6"
+                (click)="requestToCancel()"
+              >
+                SUBMIT CANCELLATION REQUEST
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+      <div class="col-md-12">
+        <app-support-document-uploader
+          [upload_details]="{ type: 'PO', id: po_data?.id }"
+        ></app-support-document-uploader>
+      </div>
+    </div>
+
+    <!-- Edit Po model -->
+    <div
+      class="modal fade"
+      bsModal
+      #editPoModel="bs-modal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="mySmallModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h4 class="modal-title">Edit Purchase Order</h4>
+            <button
+              type="button"
+              class="close"
+              aria-label="Close"
+              (click)="editPoModel.hide()"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <label class="col-sm-3 col-form-label text-right"
+                    >Currency <span class="text-danger">*</span></label
+                  >
+                  <div class="col-sm-9">
+                    <select
+                      class="form-control"
+                      name="currency"
+                      [(ngModel)]="currency"
+                      (ngModelChange)="setCurrencyRate()"
+                    >
+                      <option value="null">Please select Currency</option>
+                      <option *ngFor="let cc of currencies" [ngValue]="cc">
+                        {{ cc.c_code }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <label class="col-sm-3 col-form-label text-right"
+                    >Currency Rate<span class="text-danger">*</span></label
+                  >
+                  <div class="col-sm-9">
+                    <input
+                      class="form-control"
+                      type="number"
+                      name="currency_rate"
+                      [(ngModel)]="currency_rate"
+                      [disabled]="currency == null || currency?.is_base == 1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <label class="col-sm-3 col-form-label text-right"
+                    >Project Name</label
+                  >
+                  <div class="col-sm-9">
+                    <input
+                      class="form-control"
+                      type="string"
+                      name="project_name"
+                      [(ngModel)]="project_name"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <label class="col-sm-3 col-form-label text-right"
+                    >Engineer Name</label
+                  >
+                  <div class="col-sm-9">
+                    <select
+                      class="form-control"
+                      name="engineer"
+                      [(ngModel)]="engineer"
+                    >
+                      <option value="null">Please select</option>
+                      <option *ngFor="let sr of sales_reps" value="{{ sr.id }}">
+                        {{ sr.firstname }} {{ sr.lastname }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12 mt-1">
+              <button
+                class="btn btn-success btn-lg float-right ml-2"
+                type="button"
+                (click)="editPo(editPoModel)"
+              >
+                Edit
+              </button>
+              <button
+                class="btn btn-warning btn-lg float-right"
+                type="button"
+                (click)="editPoModel.hide()"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Purchase Orders Term Edit model -->
+    <div
+      class="modal fade"
+      bsModal
+      #purchaseOrdersTermsEditModal="bs-modal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="mySmallModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-info">
+            <h4 class="modal-title">Edit Quotation Terms and Conditions</h4>
+            <button
+              type="button"
+              class="close"
+              aria-label="Close"
+              (click)="purchaseOrdersTermsEditModal.hide()"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row p-3">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <h6 class="col-sm-12">Consignee Details</h6>
+                  <div class="col-sm-12">
+                    <p-editor
+                      [(ngModel)]="consignee_details"
+                      [style]="{ height: '120px' }"
+                      ><p-header>
+                        <!-- Add font size dropdown -->
+                        <span class="ql-formats">
+                          <select class="ql-font"></select>
+                          <select class="ql-size"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-bold"></button>
+                          <button class="ql-italic"></button>
+                          <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-color"></select>
+                          <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-align"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-script" value="sub"></button>
+                          <button class="ql-script" value="super"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-header" value="1"></button>
+                          <button class="ql-header" value="2"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-list" value="ordered"></button>
+                          <button class="ql-list" value="bullet"></button>
+                          <button class="ql-indent" value="-1"></button>
+                          <button class="ql-indent" value="+1"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-clean"></button>
+                        </span> </p-header
+                    ></p-editor>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row p-3">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <h6 class="col-sm-12">Delivery Address</h6>
+                  <div class="col-sm-12">
+                    <p-editor
+                      [(ngModel)]="delivery_address"
+                      [style]="{ height: '120px' }"
+                      ><p-header>
+                        <!-- Add font size dropdown -->
+                        <span class="ql-formats">
+                          <select class="ql-font"></select>
+                          <select class="ql-size"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-bold"></button>
+                          <button class="ql-italic"></button>
+                          <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-color"></select>
+                          <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-align"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-script" value="sub"></button>
+                          <button class="ql-script" value="super"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-header" value="1"></button>
+                          <button class="ql-header" value="2"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-list" value="ordered"></button>
+                          <button class="ql-list" value="bullet"></button>
+                          <button class="ql-indent" value="-1"></button>
+                          <button class="ql-indent" value="+1"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-clean"></button>
+                        </span> </p-header
+                    ></p-editor>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row p-3">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <h6 class="col-sm-12">Notify Party 1</h6>
+                  <div class="col-sm-12">
+                    <p-editor
+                      [(ngModel)]="notify_party_1"
+                      [style]="{ height: '120px' }"
+                      ><p-header>
+                        <!-- Add font size dropdown -->
+                        <span class="ql-formats">
+                          <select class="ql-font"></select>
+                          <select class="ql-size"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-bold"></button>
+                          <button class="ql-italic"></button>
+                          <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-color"></select>
+                          <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-align"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-script" value="sub"></button>
+                          <button class="ql-script" value="super"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-header" value="1"></button>
+                          <button class="ql-header" value="2"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-list" value="ordered"></button>
+                          <button class="ql-list" value="bullet"></button>
+                          <button class="ql-indent" value="-1"></button>
+                          <button class="ql-indent" value="+1"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-clean"></button>
+                        </span> </p-header
+                    ></p-editor>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row p-3">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <h6 class="col-sm-12">Notify Party 2</h6>
+                  <div class="col-sm-12">
+                    <p-editor
+                      [(ngModel)]="notify_party_2"
+                      [style]="{ height: '120px' }"
+                      ><p-header>
+                        <!-- Add font size dropdown -->
+                        <span class="ql-formats">
+                          <select class="ql-font"></select>
+                          <select class="ql-size"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-bold"></button>
+                          <button class="ql-italic"></button>
+                          <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-color"></select>
+                          <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-align"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-script" value="sub"></button>
+                          <button class="ql-script" value="super"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-header" value="1"></button>
+                          <button class="ql-header" value="2"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-list" value="ordered"></button>
+                          <button class="ql-list" value="bullet"></button>
+                          <button class="ql-indent" value="-1"></button>
+                          <button class="ql-indent" value="+1"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-clean"></button>
+                        </span> </p-header
+                    ></p-editor>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row p-3">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <h6 class="col-sm-12">Buyer</h6>
+                  <div class="col-sm-12">
+                    <p-editor [(ngModel)]="buyer" [style]="{ height: '120px' }"
+                      ><p-header>
+                        <!-- Add font size dropdown -->
+                        <span class="ql-formats">
+                          <select class="ql-font"></select>
+                          <select class="ql-size"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-bold"></button>
+                          <button class="ql-italic"></button>
+                          <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-color"></select>
+                          <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-align"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-script" value="sub"></button>
+                          <button class="ql-script" value="super"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-header" value="1"></button>
+                          <button class="ql-header" value="2"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-list" value="ordered"></button>
+                          <button class="ql-list" value="bullet"></button>
+                          <button class="ql-indent" value="-1"></button>
+                          <button class="ql-indent" value="+1"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-clean"></button>
+                        </span> </p-header
+                    ></p-editor>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row p-3">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <h6 class="col-sm-12">Marks & NOS</h6>
+                  <div class="col-sm-12">
+                    <p-editor
+                      [(ngModel)]="marks_Nos"
+                      [style]="{ height: '120px' }"
+                      ><p-header>
+                        <!-- Add font size dropdown -->
+                        <span class="ql-formats">
+                          <select class="ql-font"></select>
+                          <select class="ql-size"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-bold"></button>
+                          <button class="ql-italic"></button>
+                          <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-color"></select>
+                          <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-align"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-script" value="sub"></button>
+                          <button class="ql-script" value="super"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-header" value="1"></button>
+                          <button class="ql-header" value="2"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-list" value="ordered"></button>
+                          <button class="ql-list" value="bullet"></button>
+                          <button class="ql-indent" value="-1"></button>
+                          <button class="ql-indent" value="+1"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-clean"></button>
+                        </span> </p-header
+                    ></p-editor>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12 mt-1 text-right">
+              <button
+                class="btn btn-success mr-3"
+                type="button"
+                (click)="updateQuotationTerms(purchaseOrdersTermsEditModal)"
+              >
+                Update
+              </button>
+              <button
+                class="btn btn-warning"
+                type="button"
+                (click)="purchaseOrdersTermsEditModal.hide()"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- edit specification  -->
+    <div
+      class="modal fade"
+      bsModal
+      #editSpecificationModal="bs-modal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="mySmallModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h4 class="modal-title">Edit Specification</h4>
+            <button
+              type="button"
+              class="close"
+              aria-label="Close"
+              (click)="editSpecificationModal.hide()"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="form-group row">
+                  <h4 class="col-sm-12 col-form-label text-center">
+                    Specification
+                  </h4>
+                  <div class="col-sm-12">
+                    <p-editor
+                      name="specification"
+                      [(ngModel)]="edit_specification"
+                      [style]="{ height: '120px' }"
+                      ><p-header>
+                        <!-- Add font size dropdown -->
+                        <span class="ql-formats">
+                          <select class="ql-font"></select>
+                          <select class="ql-size"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-bold"></button>
+                          <button class="ql-italic"></button>
+                          <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-color"></select>
+                          <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <select class="ql-align"></select>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-script" value="sub"></button>
+                          <button class="ql-script" value="super"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-header" value="1"></button>
+                          <button class="ql-header" value="2"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-list" value="ordered"></button>
+                          <button class="ql-list" value="bullet"></button>
+                          <button class="ql-indent" value="-1"></button>
+                          <button class="ql-indent" value="+1"></button>
+                        </span>
+                        <span class="ql-formats">
+                          <button class="ql-clean"></button>
+                        </span> </p-header
+                    ></p-editor>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer text-center">
+              <button
+                class="btn btn-primary mr-3"
+                type="button"
+                (click)="editSpecification(editSpecificationModal)"
+              >
+                Edit Specification
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Edit Invoice Items Percentage model -->
+  <div
+    class="modal fade"
+    bsModal
+    #editInvoiceItemPercentageModal="bs-modal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="mySmallModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-warning">
+          <h4 class="modal-title">Add Bulk Discount</h4>
+          <button
+            type="button"
+            class="close"
+            aria-label="Close"
+            (click)="editInvoiceItemPercentageModal.hide()"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row p-3">
+            <div class="col-sm-12" *ngIf="sysuser?.userlevel >= 14">
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label text-right"
+                  >Discount <span class="text-danger">*</span></label
+                >
+                <div class="col-sm-8">
+                  <!-- <input
+                      class="form-control"
+                      type="number"
+                      step="any"
+                      name="discount"
+                      [(ngModel)]="edit_all_discount"
+                    /> -->
+                  <div class="input-group">
+                    <input
+                      class="form-control"
+                      type="number"
+                      step="any"
+                      name="discount"
+                      [(ngModel)]="edit_all_discount"
+                    />
+                    <div class="input-group-append">
+                      <select
+                        class="form-control"
+                        name="edit_all_discount_type"
+                        [(ngModel)]="edit_all_discount_type"
+                      >
+                        <option value="%">%</option>
+                        <option
+                          [ngValue]="
+                            sysuser?.app_settings?.basic_settings
+                              ?.default_currency
+                          "
+                        >
+                          {{
+                            sysuser?.app_settings?.basic_settings
+                              ?.default_currency
+                          }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-12 mt-1">
+            <button
+              class="btn btn-success btn-lg float-right ml-2"
+              type="button"
+              (click)="
+                editInvoiceItemPercentage(editInvoiceItemPercentageModal)
+              "
+            >
+              Edit
+            </button>
+            <button
+              class="btn btn-warning btn-lg float-right"
+              type="button"
+              (click)="editInvoiceItemPercentageModal.hide()"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

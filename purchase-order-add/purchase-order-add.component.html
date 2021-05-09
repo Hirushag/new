@@ -1,0 +1,386 @@
+<div class="content-heading mb-2">Create Purchase Order</div>
+<div class="row" *ngIf="LoadUI == false">
+  <div class="col-lg-12 no-gutters mt-5">
+    <div class="d-flex align-middle align-items-center justify-content-center">
+      <div class="ball-grid-pulse">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div class="d-flex align-middle align-items-center justify-content-center">
+      <h2 class="text-muted">Loading interfaces...</h2>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="LoadUI == true">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="float-right">
+        <button
+          class="mb-2 btn btn-outline-primary mr-2 btn-oval"
+          type="button"
+          [routerLink]="['/home']"
+        >
+          Dashboard
+        </button>
+        <button
+          class="mb-2 btn btn-outline-primary btn-oval"
+          type="button"
+          [routerLink]="['/inventory/purchaseorder/summary']"
+        >
+          Purchase Orders
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid" *hasPermission="[29]">
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <!-- <div class="offset-sm-2 col-sm-4 text-center">
+        <div class="col-md-12"><h6>PO Code</h6></div>
+        <div class="col-md-12">
+          <input class="form-control" type="text" name="po_code" [(ngModel)]="po_code" />
+        </div>
+      </div> -->
+              <div class="col-sm-4 text-center">
+                <div class="col-md-12">
+                  <h6>Supplier <span class="text-danger">*</span></h6>
+                </div>
+                <div class="col-md-12">
+                  <p-dropdown
+                    [options]="suppliers"
+                    name="supplier"
+                    [(ngModel)]="supplier"
+                    (ngModelChange)="setTaxType()"
+                    [filter]="true"
+                    [autoWidth]="true"
+                    inputStyleClass="form-control"
+                    styleClass="fw"
+                    [style]="{ width: '100%' }"
+                    inputStyle="{'width':'100%'}"
+                    [resetFilterOnHide]="true"
+                    [showClear]="true"
+                    [autofocus]="true"
+                  ></p-dropdown>
+                </div>
+              </div>
+              <div class="col-sm-4 text-center">
+                <div class="col-md-12">
+                  <h6>Currency <span class="text-danger">*</span></h6>
+                </div>
+                <div class="col-md-12">
+                  <select
+                    class="form-control"
+                    name="currency"
+                    [(ngModel)]="currency"
+                    (ngModelChange)="setCurrencyRate()"
+                  >
+                    <option value="null">Please select Currency</option>
+                    <option *ngFor="let cc of currencies" [ngValue]="cc">
+                      {{ cc.c_code }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-sm-4 text-center">
+                <div class="col-md-12">
+                  <h6>Currency Rate <span class="text-danger">*</span></h6>
+                </div>
+                <div class="col-md-12">
+                  <input
+                    class="form-control"
+                    type="number"
+                    name="currency_rate"
+                    [(ngModel)]="currency_rate"
+                    [disabled]="currency == null || currency?.is_base == 1"
+                  />
+                </div>
+              </div>
+
+              <div class="col-sm-4 text-center" style="margin-top: 13px">
+                <div class="col-md-12">
+                  <h6>Project Name</h6>
+                </div>
+                <div class="col-md-12">
+                  <input
+                    class="form-control"
+                    type="string"
+                    name="project_name"
+                    [(ngModel)]="project_name"
+                  />
+                </div>
+              </div>
+              <div class="col-sm-4 text-center mb-2" style="margin-top: 13px">
+                <div class="col-md-12">
+                  <h6>Engineer</h6>
+                </div>
+                <div class="col-md-12">
+                  <select
+                    class="form-control"
+                    name="engineer"
+                    [(ngModel)]="engineer"
+                  >
+                    <option value="null">Please select</option>
+                    <option *ngFor="let sr of sales_reps" value="{{ sr.id }}">
+                      {{ sr.firstname }} {{ sr.lastname }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-sm-4 text-center" style="margin-top: 13px">
+                <div class="col-md-12">
+                  <h6>PO-Type</h6>
+                </div>
+                <div class="col-md-12">
+                  <select
+                    class="form-control"
+                    name="po-type"
+                    [(ngModel)]="po_type"
+                  >
+                    <option *ngFor="let sr of po_types" value="{{ sr.value }}">
+                      {{ sr.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="col-sm-4 text-center">
+                <div class="col-md-12">
+                  <h6>TAX Type<span class="text-danger">*</span></h6>
+                </div>
+                <div class="col-md-12">
+                  <p-dropdown
+                    [options]="tax_types"
+                    name="tax_type"
+                    [(ngModel)]="tax_type"
+                    [filter]="true"
+                    [autoWidth]="true"
+                    inputStyleClass="form-control"
+                    styleClass="fw"
+                    [style]="{ width: '100%' }"
+                    inputStyle="{'width':'100%'}"
+                    [resetFilterOnHide]="true"
+                    [showClear]="true"
+                    [autofocus]="true"
+                  ></p-dropdown>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-sm-12">
+        <div class="card card-default">
+          <div class="card-header">
+            <b>Note:</b>Please add all the items and Click Finish to Proceed.
+          </div>
+          <!-- START table-responsive-->
+          <div class="table-responsive p-3">
+            <table
+              class="table table-striped table-sm table-bordered table-hover"
+              id="table-ext-2"
+            >
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th class="text-center" style="width: 400px">Product</th>
+                  <th class="text-right">Unit Price</th>
+                  <th class="text-right" style="min-width: 150px">Quantity</th>
+                  <th class="text-right" style="min-width: 150px">
+                    Total Cost
+                  </th>
+
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of poitems; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td
+                    [ngClass]="{
+                      'bg-warning-light':
+                        item.product == null && !item.input_enabled
+                    }"
+                    (click)="item.input_enabled = true; validated = false"
+                  >
+                    <span *ngIf="!item.input_enabled"
+                      >{{ item.product?.productcode }}
+                      {{ item.product?.productname }}</span
+                    >
+                    <p-dropdown
+                      *ngIf="item.input_enabled"
+                      [options]="productslist"
+                      name="supplier"
+                      [(ngModel)]="item.product"
+                      [filter]="true"
+                      [autoWidth]="true"
+                      inputStyleClass="form-control"
+                      styleClass="fw"
+                      [style]="{ width: '400px' }"
+                      inputStyle="{'width':'400px'}"
+                      [resetFilterOnHide]="true"
+                      [showClear]="true"
+                      [autofocus]="true"
+                      [virtualScroll]="true"
+                      itemSize="10"
+                      appendTo="body"
+                      (ngModelChange)="setValues(null)"
+                    ></p-dropdown>
+                  </td>
+                  <td
+                    class="text-right"
+                    (click)="item.input_enabled = true; validated = false"
+                  >
+                    <span *ngIf="!item.input_enabled">{{
+                      item.unitprice | number: "1.2-2"
+                    }}</span>
+                    <input
+                      *ngIf="item.input_enabled"
+                      class="form-control text-right"
+                      [(ngModel)]="item.unitprice"
+                      (keydown.enter)="addLine(1)"
+                      (ngModelChange)="setValues(1)"
+                    />
+                  </td>
+                  <td
+                    class="text-right"
+                    [ngClass]="{
+                      'bg-warning-light':
+                        item.quantity == null && !item.input_enabled
+                    }"
+                    (click)="item.input_enabled = true; validated = false"
+                  >
+                    <span *ngIf="!item.input_enabled"
+                      >{{ item.quantity }} {{ item.product?.unit }}</span
+                    >
+                    <input
+                      type="number"
+                      *ngIf="item.input_enabled"
+                      class="form-control text-right"
+                      [(ngModel)]="item.quantity"
+                      (keydown.enter)="addLine(1)"
+                      (ngModelChange)="setValues(null)"
+                    />
+                  </td>
+                  <td
+                    class="text-right"
+                    [ngClass]="{
+                      'bg-warning-light':
+                        item.totalcost == null && !item.input_enabled
+                    }"
+                    (click)="item.input_enabled = true; validated = false"
+                  >
+                    <span *ngIf="!item.input_enabled">{{
+                      item.totalcost | number: "1.2-2"
+                    }}</span>
+                    <input
+                      type="number"
+                      *ngIf="item.input_enabled"
+                      class="form-control text-right"
+                      [(ngModel)]="item.totalcost"
+                      (keydown.enter)="addLine(1)"
+                      (ngModelChange)="setValues(2)"
+                    />
+                  </td>
+
+                  <td>
+                    <button
+                      class="btn-xs btn btn-success m-1"
+                      (click)="calculateTotal()"
+                      [disabled]="item.input_enabled == false"
+                    >
+                      <i class="far fa-check-circle"></i>
+                    </button>
+                    <button
+                      class="btn-xs btn btn-danger m-1"
+                      (click)="removeitem(i, item.totalcost)"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td class="text-right text-bold">Net Total</td>
+                  <td class="text-right text-bold">
+                    {{ total | number: "1.2-2" }}
+                  </td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- END table-responsive-->
+          <div class="card-footer">
+            <div class="d-flex">
+              <div>
+                <div>
+                  <div>
+                    <button
+                      class="btn btn-primary btn-sm mr-2 btn-oval"
+                      type="button"
+                      (click)="addLine(1)"
+                    >
+                      Add row
+                    </button>
+                    <button
+                      class="btn btn-primary btn-sm btn-oval"
+                      type="button"
+                      (click)="addLine(4)"
+                    >
+                      Add multiple rows
+                    </button>
+                    <!-- <button
+                      class="btn btn-primary btn-sm"
+                      (click)="clearEmptyrows()"
+                    >
+                      Clear
+                    </button> -->
+                  </div>
+                </div>
+              </div>
+              <div class="ml-auto">
+                <button
+                  class="btn btn-success btn-sm mr-2 btn-oval"
+                  (click)="validateData()"
+                  [disabled]="validated == true"
+                >
+                  Validate & Finish
+                </button>
+                <button
+                  class="btn btn-success btn-sm mr-2 btn-oval"
+                  (click)="submitPO()"
+                  [disabled]="validated == false"
+                >
+                  Save as Draft
+                </button>
+                <br />
+                <span *ngIf="validated == true" class="text-danger"
+                  >*Save your work now!</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
